@@ -3,6 +3,7 @@
 #inputs
 $expected_dat_file     = "norm-distrib_mean50_variance0.2_amp1.0_range30-70.dat"
 $experimental_dat_file = "norm-distrib_mean40_variance0.2_amp1.0_range30-70.dat"
+$acceptable_error = 1.0 # acceptable total area difference between both dats
 
 #constants
 $dat_filter = /^([-0-9]+)\s+([-_.e0-9]+)$/
@@ -38,3 +39,16 @@ $experimental_mean = dat_mean($experimental_dat)
 
 puts "expected mean:     #{$expected_mean}"
 puts "experimental mean: #{$experimental_mean}"
+
+def dat_diff(expected, experimental)
+  diffsquares = 0.0
+  expected_pt     = nil
+  experimental_pt = nil
+  0.upto(expected.length - 1) do |i|
+    expected_pt     = expected[i][1]
+    experimental_pt = experimental[i][1]
+    diffsquares += (expected_pt - experimental_pt)**2
+  end
+  return Math.sqrt(diffsquares)
+end
+puts "diff: #{dat_diff($expected_dat, $experimental_dat)}"
