@@ -97,6 +97,7 @@ lo = offsets.min.floor - offset_diff - $experimental_mean.ceil  # reasonable low
 hi = offsets.max.ceil  + offset_diff - $experimental_mean.floor # reasonable upper bound yadda yadda
 #lo = -100
 #hi = 100
+experimental_shifted = nil
 lo.upto(hi) do |offset|
   exper = dat_shift($experimental_dat, offset)
   diff = dat_diff($expected_dat, exper)
@@ -104,8 +105,41 @@ lo.upto(hi) do |offset|
   if (diff < $best_diff)
     $best_offset = offset
     $best_diff   = diff
+    experimental_shifted = exper
     #puts "best diff at #{offset} is #{diff}"
   end
 end
 puts "expected:experimental diff, found:      #{$best_diff}"
 puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset})]"
+
+def dat_max(dat)
+  gc_content_amt_max = -(2**32)
+  dat.each do |d|
+    gc_content_amount   = d[1]
+    if (gc_content_amount > gc_content_amt_max)
+      gc_content_amt_max = gc_content_amount
+    end
+  end
+  return gc_content_amt_max
+end
+$expected_max     = dat_max($expected_dat)
+$experimental_max = dat_max($experimental_dat)
+puts "expected     max: #{$expected_max}"
+puts "experimental max: #{$experimental_max}"
+$amplification = $expected_max/$experimental_max
+puts "expected:experimental amplification: #{$amplification}"
+
+def dat_amplify(dat, amplification)
+  amplified = []
+  dat.each do |d|
+    gc_content                 = d[0]
+    gc_content_amount_adjusted = (d[1] * amplification)
+    amplified << [gc_content, gc_content_amount_adjusted]
+  end
+  return amplified
+end
+experimental_amped = dat_amplify(experimental_shifted, $amplification)
+experimental_amped_diff = dat_diff($expected_dat, experimental_amped)
+
+puts "expected:experimental diff, amplified:  #{experimental_amped_diff}"
+puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset})] * (#{$amplification})"
