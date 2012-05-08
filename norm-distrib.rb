@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 
 #inputs
-$min = -10
-$max = 10
-$step = 1
-$amp = 1.0
-$mean = 0.0
+$mean = 50
 $stdev = Math.sqrt(0.2)
+$amp = 1.0
+$range = 20
+$min = $mean - $range
+$max = $mean + $range
 
 #constants
 $sqrt2pi = Math.sqrt(2*Math::PI)
