@@ -2,7 +2,7 @@
 
 #inputs
 $expected_dat_file     = "norm-distrib_mean50_variance0.2_amp1.0_range30-70.dat"
-$experimental_dat_file = "norm-distrib_mean40_variance0.2_amp1.0_range30-70.dat"
+$experimental_dat_file = "norm-distrib_mean40_variance0.2_amp0.8_range30-70.dat"
 $acceptable_error = 1.0 # acceptable total area difference between both dats
 
 #constants
@@ -74,18 +74,38 @@ def dat_diff(expected, experimental)
 end
 puts "expected:experimental diff, unadjusted: #{dat_diff($expected_dat, $experimental_dat)}"
 
-def dat_shift_to_center(dat, mean)
+def dat_shift(dat, shift)
   shifted = []
   dat.each do |d|
-    gc_content_adjusted = (d[0] - mean).to_i
+    gc_content_adjusted = (d[0] + shift).to_i #XXX ok to do, this rounding?
     gc_content_amount   = d[1]
     shifted << [gc_content_adjusted, gc_content_amount]
   end
   return shifted
 end
-expected_centered     = dat_shift_to_center($expected_dat,     $expected_mean)
-experimental_centered = dat_shift_to_center($experimental_dat, $experimental_mean)
+expected_centered     = dat_shift($expected_dat,     -$expected_mean)
+experimental_centered = dat_shift($experimental_dat, -$experimental_mean)
 centered_diff = dat_diff(expected_centered, experimental_centered)
 puts "expected:experimental diff, centered:   #{dat_diff(expected_centered, experimental_centered)}"
+puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$expected_mean - $experimental_mean})]"
 
-puts "expected_gc_content[i] =~ experimental_gc_content[i - (#{$expected_mean - $experimental_mean})]"
+offset_diff = ($expected_mean - $experimental_mean).abs.ceil
+offsets = [$expected_mean, $experimental_mean]
+$best_offset = nil
+$best_diff = 2**32
+lo = offsets.min.floor - offset_diff - $experimental_mean.ceil  # reasonable lower bound that the best_offset could be
+hi = offsets.max.ceil  + offset_diff - $experimental_mean.floor # reasonable upper bound yadda yadda
+#lo = -100
+#hi = 100
+lo.upto(hi) do |offset|
+  exper = dat_shift($experimental_dat, offset)
+  diff = dat_diff($expected_dat, exper)
+  #puts "diff at #{offset} is #{diff}"
+  if (diff < $best_diff)
+    $best_offset = offset
+    $best_diff   = diff
+    #puts "best diff at #{offset} is #{diff}"
+  end
+end
+puts "expected:experimental diff, found:      #{$best_diff}"
+puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset})]"
