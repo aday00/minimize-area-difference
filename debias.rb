@@ -87,3 +87,5 @@ expected_centered     = dat_shift_to_center($expected_dat,     $expected_mean)
 experimental_centered = dat_shift_to_center($experimental_dat, $experimental_mean)
 centered_diff = dat_diff(expected_centered, experimental_centered)
 puts "expected:experimental diff, centered:   #{dat_diff(expected_centered, experimental_centered)}"
+
+puts "expected_gc_content[i] =~ experimental_gc_content[i - (#{$expected_mean - $experimental_mean})]"
