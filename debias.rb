@@ -14,6 +14,8 @@ $dat_filter = /^([-0-9]+)\s+([-_.e0-9]+)$/
 #$finesteps = 100 # when fine-tuning expected-to-experimental fit, use this many steps
 $finesteps = 10 # when fine-tuning expected-to-experimental fit, use this many steps
 $halffine = $finesteps / 2.0
+$fineamps = 300 # when fine-tuning amplification, use this many steps
+$amprange = 2 # fine-tune amplification at least $amprange*guess plus-or-minus from the experimental to settle on best amplification
 
 def dat_read(filename)
   dat = []
@@ -178,7 +180,7 @@ def dat_amplify(dat, amplification)
   return amplified
 end
 experimental_amped = dat_amplify(experimental_shifted, $amplification)
-experimental_amped_diff = dat_diff($expected_dat, experimental_amped)
+experimental_amped_diff = dat_diff($expected_dat_interp, experimental_amped)
 
 if (false) # debug
   puts "exper orig:"
@@ -206,6 +208,28 @@ end
 puts "expected:experimental diff, amplified:  #{experimental_amped_diff}"
 puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset.to_f / $finesteps})] * (#{$amplification})"
 
+hi = $amplification*$amprange
+lo = $amplification - (hi - $amplification)
+hi = ($fineamps*hi).ceil
+lo = ($fineamps*lo).floor
+best_amp = nil
+best_amp_diff = 2**32
+experimental_itr_amped = nil
+lo.upto(hi) do |a|
+  amp = a.to_f / $fineamps
+  amped = dat_amplify(experimental_shifted, amp)
+  diff = dat_diff($expected_dat_interp, amped)
+  #puts "diff at #{amp} is #{experimental_amped_diff}"
+  if (diff < best_amp_diff)
+    best_amp = amp
+    best_amp_diff = diff
+    experimental_itr_amped = amped
+    #puts "best diff at #{amp} is #{experimental_amped_diff}"
+  end
+end
+puts "expected:experimental diff, iteratively amplified:  #{best_amp_diff}"
+puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset.to_f / $finesteps})] * (#{best_amp})"
+
 #puts "debiased data follows according to above linear transformation:"
 #experimental_amped.each do |d|
 #  puts "#{d[0]}\t#{d[1]}"
@@ -217,14 +241,17 @@ idx = 0
 $experimental_dat.each do |ed|
   gc_content = ed[0]
   #puts "egcc #{gc_content}"
-  while (idx < experimental_amped.length)
+  #while (idx < experimental_amped.length)
+  while (idx < experimental_itr_amped.length)
     #puts "?gcc #{experimental_amped[idx][0]} #{$finesteps}"
     i = idx
     idx += 1
-    if (experimental_amped[i][0] % $finesteps == 0)
+    if (experimental_itr_amped[i][0] % $finesteps == 0)
       #printf("%i\t%f\n", experimental_amped[i][0] / $finesteps, experimental_amped[i][1])
-      puts "#{experimental_amped[i][0] / $finesteps}\t#{experimental_amped[i][1]}"
+      puts "#{experimental_itr_amped[i][0] / $finesteps}\t#{experimental_itr_amped[i][1]}"
       break
     end
   end
 end
+
+
