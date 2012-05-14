@@ -2,10 +2,12 @@
 
 #inputs
 #$expected_dat_file     = "norm-distrib_mean50_variance0.2_amp1.0_range30-70.dat"
-$expected_dat_file     = "norm-distrib_mean50_variance0.5_amp1.0_range30-70.dat"
+#$expected_dat_file     = "norm-distrib_mean50_variance0.5_amp1.0_range30-70.dat"
+$expected_dat_file     = "norm-distrib_mean50_variance5.0_amp4.0_range20-80.dat"
 #$experimental_dat_file = "norm-distrib_mean40_variance0.2_amp0.8_range30-70.dat"
 #$experimental_dat_file = "norm-distrib_mean40_variance0.2_amp0.8_range30-70_noise0.1.dat"
-$experimental_dat_file = "norm-distrib_mean40_variance0.5_amp0.8_range30-70_noise0.5.dat"
+#$experimental_dat_file = "norm-distrib_mean40_variance0.5_amp0.8_range30-70_noise0.5.dat"
+$experimental_dat_file = "norm-distrib_mean53_variance5.0_amp3.5_range20-80_noise1.5.dat"
 $acceptable_error = 1.0 # acceptable total area difference between both dats
 
 #constants

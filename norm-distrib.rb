@@ -1,13 +1,12 @@
 #!/usr/bin/env ruby
 
 #inputs
-$mean = 50
-$stdev = Math.sqrt(0.5)
-$amp = 1.0
-$range = 20
-$min = 30
-$max = 70
-$noise_level = 0.0
+$mean = 53
+$stdev = Math.sqrt(5.0)
+$amp = 3.5
+$min = 20
+$max = 80
+$noise_level = 1.5
 
 #constants
 $sqrt2pi = Math.sqrt(2*Math::PI)
