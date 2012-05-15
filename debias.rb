@@ -33,9 +33,6 @@ def dat_read(filename)
   end
   return dat
 end
-$expected_dat     = dat_read($expected_dat_file)
-$experimental_dat = dat_read($experimental_dat_file)
-
 def dat_mean(dat)
   sum = 0.0
   div = 0.0
@@ -45,12 +42,6 @@ def dat_mean(dat)
   end
   return sum/div
 end
-$expected_mean = dat_mean($expected_dat)
-$experimental_mean = dat_mean($experimental_dat)
-
-puts "expected mean:     #{$expected_mean}"
-puts "experimental mean: #{$experimental_mean}"
-
 def dat_interpolate(dat)
   # multiple the number of data points in dat by linear interpolation between each point
   # this allows for finer-grained dat_shift offsets to fit experimental into expected
@@ -76,9 +67,6 @@ def dat_interpolate(dat)
   end
   return interpolated
 end
-$expected_dat_interp = dat_interpolate($expected_dat)
-$experimental_dat_interp = dat_interpolate($experimental_dat)
-
 def dat_diff(expected, experimental)
   diffsquaressum = 0.0
 
@@ -112,8 +100,6 @@ def dat_diff(expected, experimental)
   end
   return diffsquaressum # sum of the squared differences, measures fit, should minimize for best
 end
-puts "expected:experimental diff, unadjusted: #{dat_diff($expected_dat, $experimental_dat)}"
-
 def dat_shift(dat, shift)
   shifted = []
   #interpolate = (shift.to_i != shift) # if using a non-integer shift, will need to interpolate values between two expected values.  if using integer shift, then shifted gc_contents should stay as integers
@@ -125,6 +111,42 @@ def dat_shift(dat, shift)
   end
   return shifted
 end
+def dat_max(dat)
+  gc_content_amt_max = -(2**32)
+  dat.each do |d|
+    gc_content_amount   = d[1]
+    if (gc_content_amount > gc_content_amt_max)
+      gc_content_amt_max = gc_content_amount
+    end
+  end
+  return gc_content_amt_max
+end
+def dat_amplify(dat, amplification)
+  amplified = []
+  dat.each do |d|
+    gc_content                 = d[0]
+    gc_content_amount_adjusted = (d[1] * amplification)
+    amplified << [gc_content, gc_content_amount_adjusted]
+  end
+  return amplified
+end
+
+
+
+$expected_dat     = dat_read($expected_dat_file)
+$experimental_dat = dat_read($experimental_dat_file)
+
+$expected_mean = dat_mean($expected_dat)
+$experimental_mean = dat_mean($experimental_dat)
+
+puts "expected mean:     #{$expected_mean}"
+puts "experimental mean: #{$experimental_mean}"
+
+$expected_dat_interp = dat_interpolate($expected_dat)
+$experimental_dat_interp = dat_interpolate($experimental_dat)
+
+puts "expected:experimental diff, unadjusted: #{dat_diff($expected_dat, $experimental_dat)}"
+
 expected_centered     = dat_shift($expected_dat,     -$expected_mean.to_i) # XXX: actually shift the interpolated dat
 experimental_centered = dat_shift($experimental_dat, -$experimental_mean.to_i) #XXX
 centered_diff = dat_diff(expected_centered, experimental_centered)
@@ -155,16 +177,6 @@ end
 puts "expected:experimental diff, found:      #{$best_diff}"
 puts "expected_gc_content[i] =~ experimental_gc_content[i + (#{$best_offset/$finesteps.to_f})]"
 
-def dat_max(dat)
-  gc_content_amt_max = -(2**32)
-  dat.each do |d|
-    gc_content_amount   = d[1]
-    if (gc_content_amount > gc_content_amt_max)
-      gc_content_amt_max = gc_content_amount
-    end
-  end
-  return gc_content_amt_max
-end
 $expected_max     = dat_max($expected_dat)
 $experimental_max = dat_max($experimental_dat)
 puts "expected     max: #{$expected_max}"
@@ -172,15 +184,7 @@ puts "experimental max: #{$experimental_max}"
 $amplification = $expected_max/$experimental_max
 puts "expected:experimental amplification: #{$amplification}"
 
-def dat_amplify(dat, amplification)
-  amplified = []
-  dat.each do |d|
-    gc_content                 = d[0]
-    gc_content_amount_adjusted = (d[1] * amplification)
-    amplified << [gc_content, gc_content_amount_adjusted]
-  end
-  return amplified
-end
+
 experimental_amped = dat_amplify(experimental_shifted, $amplification)
 experimental_amped_diff = dat_diff($expected_dat_interp, experimental_amped)
 
